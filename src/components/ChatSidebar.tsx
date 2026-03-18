@@ -14,6 +14,7 @@ interface ChatSidebarProps {
   setPromptRuler: (ruler: string) => void;
   customInstructions: string;
   setCustomInstructions: (instructions: string) => void;
+  isExtensionMode?: boolean;
 }
 
 export function ChatSidebar({ 
@@ -25,7 +26,8 @@ export function ChatSidebar({
   promptRuler,
   setPromptRuler,
   customInstructions,
-  setCustomInstructions
+  setCustomInstructions,
+  isExtensionMode = false
 }: ChatSidebarProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
@@ -118,7 +120,7 @@ export function ChatSidebar({
   if (!isOpen) return null;
 
   return (
-    <div className="w-96 h-full bg-white border-l border-gray-200 flex flex-col shadow-lg transition-all duration-300 relative">
+    <div className={`${isExtensionMode ? 'w-full' : 'w-96'} h-full bg-white border-l border-gray-200 flex flex-col shadow-lg transition-all duration-300 relative`}>
       <div className="p-4 border-b border-gray-200 bg-blue-50 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Bot className="w-6 h-6 text-blue-600" />
@@ -132,12 +134,14 @@ export function ChatSidebar({
           >
             <Brain className="w-5 h-5" />
           </button>
-          <button 
-            onClick={onClose}
-            className="p-1.5 hover:bg-blue-100 rounded-md text-gray-500 hover:text-gray-800 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          {!isExtensionMode && (
+            <button 
+              onClick={onClose}
+              className="p-1.5 hover:bg-blue-100 rounded-md text-gray-500 hover:text-gray-800 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
         </div>
       </div>
 

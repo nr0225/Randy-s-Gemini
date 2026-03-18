@@ -21,6 +21,8 @@ export default function App() {
     return localStorage.getItem('gemini_custom_instructions') || '';
   });
 
+  const [isExtensionMode, setIsExtensionMode] = useState(false);
+
   useEffect(() => {
     localStorage.setItem('gemini_user_memory', userMemory);
   }, [userMemory]);
@@ -32,6 +34,59 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('gemini_custom_instructions', customInstructions);
   }, [customInstructions]);
+
+  useEffect(() => {
+    // 偵測是否在 Chrome 擴充功能環境中執行
+    if (window.chrome && chrome.tabs && chrome.scripting) {
+      setIsExtensionMode(true);
+      
+      const fetchCurrentTabContent = () => {
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+          const activeTab = tabs[0];
+          if (activeTab && activeTab.id) {
+            chrome.scripting.executeScript({
+              target: { tabId: activeTab.id },
+              func: () => document.body.innerText,
+            }).then((results) => {
+              if (results && results[0]) {
+                setContent(results[0].result as string);
+              }
+            }).catch(err => console.error("無法讀取網頁內容: ", err));
+          }
+        });
+      };
+
+      // 初始抓取
+      fetchCurrentTabContent();
+
+      // 當切換分頁或網頁更新時，重新抓取內容
+      chrome.tabs.onActivated.addListener(fetchCurrentTabContent);
+      chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+        if (changeInfo.status === 'complete' && tab.active) {
+          fetchCurrentTabContent();
+        }
+      });
+    }
+  }, []);
+
+  if (isExtensionMode) {
+    return (
+      <div className="w-full h-screen bg-white overflow-hidden">
+        <ChatSidebar 
+          pageContent={content} 
+          isOpen={true} 
+          onClose={() => {}} 
+          userMemory={userMemory}
+          setUserMemory={setUserMemory}
+          promptRuler={promptRuler}
+          setPromptRuler={setPromptRuler}
+          customInstructions={customInstructions}
+          setCustomInstructions={setCustomInstructions}
+          isExtensionMode={true}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen w-full bg-gray-200 overflow-hidden font-sans p-2">
@@ -52,6 +107,7 @@ export default function App() {
           setPromptRuler={setPromptRuler}
           customInstructions={customInstructions}
           setCustomInstructions={setCustomInstructions}
+          isExtensionMode={false}
         />
       </div>
     </div>

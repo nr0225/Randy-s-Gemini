@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "Gemini 網頁側邊欄助理",
+  "version": "1.0",
+  "description": "在側邊欄隨時呼叫 Gemini，並自動讀取當前網頁內容。",
+  "permissions": ["activeTab", "scripting", "sidePanel"],
+  "host_permissions": ["<all_urls>"],
+  "action": {
+    "default_title": "開啟 Gemini 助理"
+  },
+  "side_panel": {
+    "default_path": "index.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  }
+}
