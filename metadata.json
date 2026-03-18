@@ -1,0 +1,5 @@
+{
+  "name": "Randy\u0027s Gemini ",
+  "description": "A web page with a built-in Gemini 3.1 Pro assistant in the right sidebar that can read the page content and interact with the user.",
+  "requestFramePermissions": []
+}
