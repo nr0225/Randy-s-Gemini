@@ -1,40 +1,20 @@
-# Randy's Gemini
+<div align="center">
+<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+</div>
 
-Randy's Gemini is a browser-based AI sidebar project designed to improve productivity and AI-assisted workflows.
+# Run and deploy your AI Studio app
 
-## Overview
+This contains everything you need to run your app locally.
 
-This project focuses on AI sidebar workflow integration for browser use, especially around Google AI Studio / Gemini, with future OpenAI API integration planned.
+View your app in AI Studio: https://ai.studio/apps/6a4388f3-c833-406b-877d-8de4b07dc198
 
-## Features
+## Run Locally
 
-- Browser-based AI sidebar
-- AI support for browsing, writing, and research
-- Lightweight productivity workflow
-- Foundation for future OpenAI API integration
+**Prerequisites:**  Node.js
 
-## Tech Stack
 
-- TypeScript
-- Vite
-
-## Roadmap
-
-- OpenAI API integration
-- Better prompt management
-- Improved sidebar UX
-- Expanded productivity use cases
-
-## Project Status
-
-This repository is actively maintained as an AI productivity tool.
-
-## Local Development
-
-npm install
-
-npm run dev
-
-## Author
-
-Maintained by Randy.
+1. Install dependencies:
+   `npm install`
+2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+3. Run the app:
+   `npm run dev`

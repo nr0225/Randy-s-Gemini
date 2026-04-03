@@ -16,6 +16,13 @@ export interface ChatMessage {
   attachments?: Attachment[];
 }
 
+export const SUPPORTED_MODELS = [
+  { id: 'gemini-3.1-pro-preview', name: 'Gemini 3.1 Pro (最強大)', description: '適合複雜邏輯與深度分析' },
+  { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash (最平衡)', description: '速度快且能力均衡' },
+  { id: 'gemini-3.1-flash-lite-preview', name: 'Gemini 3.1 Flash Lite (最快)', description: '極速響應，適合簡單任務' },
+  { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', description: '穩定且多功能的版本' },
+];
+
 export async function* streamGeminiChat(
   message: string,
   attachments: Attachment[],
@@ -23,7 +30,8 @@ export async function* streamGeminiChat(
   history: ChatMessage[],
   userMemory: string,
   promptRuler: string,
-  customInstructions: string
+  customInstructions: string,
+  modelId: string = 'gemini-2.5-flash'
 ) {
   const systemInstruction = `You are a helpful AI assistant integrated into a web page sidebar.
 You act as the user's personal agent.
@@ -87,7 +95,7 @@ You have access to Google Search and Google Maps tools. Use them when the user a
   });
 
   const responseStream = await ai.models.generateContentStream({
-    model: "gemini-2.5-flash",
+    model: modelId,
     contents,
     config: {
       systemInstruction,

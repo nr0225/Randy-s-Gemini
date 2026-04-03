@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Loader2, X, Paperclip, Brain, File, Image as ImageIcon } from 'lucide-react';
+import { Send, Bot, User, Loader2, X, Paperclip, Brain, File, Image as ImageIcon, Settings, ChevronDown, Activity } from 'lucide-react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { ChatMessage, streamGeminiChat, Attachment } from '../services/geminiService';
+import { ChatMessage, streamGeminiChat, Attachment, SUPPORTED_MODELS } from '../services/geminiService';
 
 interface ChatSidebarProps {
   pageContent: string;
@@ -33,10 +33,22 @@ export function ChatSidebar({
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isMemoryModalOpen, setIsMemoryModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'memory' | 'ruler' | 'instructions'>('memory');
+  const [activeTab, setActiveTab] = useState<'memory' | 'ruler' | 'instructions' | 'model'>('memory');
   const [pendingAttachments, setPendingAttachments] = useState<Attachment[]>([]);
+  const [selectedModel, setSelectedModel] = useState(localStorage.getItem('gemini_selected_model') || 'gemini-2.5-flash');
+  const [tokenUsage, setTokenUsage] = useState(() => {
+    return parseInt(localStorage.getItem('gemini_token_usage') || '0');
+  });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    localStorage.setItem('gemini_selected_model', selectedModel);
+  }, [selectedModel]);
+
+  useEffect(() => {
+    localStorage.setItem('gemini_token_usage', tokenUsage.toString());
+  }, [tokenUsage]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -88,10 +100,17 @@ export function ChatSidebar({
     ]);
 
     try {
-      const stream = streamGeminiChat(messageToSend, currentAttachments, pageContent, messages, userMemory, promptRuler, customInstructions);
+      // Estimate tokens for input (approx 1 token per 4 chars)
+      const inputTokens = Math.ceil(messageToSend.length / 4) + 100; // +100 for system prompt overhead
+      setTokenUsage(prev => prev + inputTokens);
+
+      const stream = streamGeminiChat(messageToSend, currentAttachments, pageContent, messages, userMemory, promptRuler, customInstructions, selectedModel);
       let fullText = '';
       for await (const chunk of stream) {
         fullText += chunk;
+        // Estimate tokens for output
+        setTokenUsage(prev => prev + Math.ceil(chunk.length / 4));
+        
         setMessages((prev) =>
           prev.map((msg) =>
             msg.id === modelMessageId ? { ...msg, text: fullText } : msg
@@ -175,6 +194,12 @@ export function ChatSidebar({
             >
               專屬指令
             </button>
+            <button 
+              onClick={() => setActiveTab('model')} 
+              className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === 'model' ? 'text-purple-400 border-b-2 border-purple-400' : 'text-gray-400 hover:text-gray-200'}`}
+            >
+              模型設定
+            </button>
           </div>
           <div className="p-4 flex-1 flex flex-col bg-gray-800 overflow-y-auto">
             {activeTab === 'memory' && (
@@ -215,6 +240,56 @@ export function ChatSidebar({
                   placeholder="例如：&#10;你是一個嚴格的程式碼審查員。&#10;回答時請直接切入重點，不要說廢話。&#10;請永遠使用繁體中文回答。"
                 />
               </>
+            )}
+            {activeTab === 'model' && (
+              <div className="space-y-4">
+                <div className="bg-gray-900 p-4 rounded-xl border border-gray-700">
+                  <h4 className="text-sm font-semibold text-gray-100 mb-3 flex items-center gap-2">
+                    <Settings className="w-4 h-4 text-blue-400" /> 選擇模型
+                  </h4>
+                  <div className="space-y-2">
+                    {SUPPORTED_MODELS.map((model) => (
+                      <button
+                        key={model.id}
+                        onClick={() => setSelectedModel(model.id)}
+                        className={`w-full text-left p-3 rounded-lg border transition-all ${
+                          selectedModel === model.id
+                            ? 'bg-blue-900/30 border-blue-500 text-blue-100'
+                            : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-500'
+                        }`}
+                      >
+                        <div className="font-medium text-sm">{model.name}</div>
+                        <div className="text-xs opacity-60">{model.description}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="bg-gray-900 p-4 rounded-xl border border-gray-700">
+                  <h4 className="text-sm font-semibold text-gray-100 mb-3 flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-emerald-400" /> 使用量統計
+                  </h4>
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-xs text-gray-400">本機累計 Token 使用量</span>
+                    <span className="text-sm font-mono text-emerald-400">{tokenUsage.toLocaleString()}</span>
+                  </div>
+                  <div className="w-full bg-gray-800 h-1.5 rounded-full overflow-hidden">
+                    <div 
+                      className="bg-emerald-500 h-full transition-all duration-500" 
+                      style={{ width: `${Math.min((tokenUsage / 1000000) * 100, 100)}%` }}
+                    />
+                  </div>
+                  <p className="text-[10px] text-gray-500 mt-2">
+                    * 註：此為本機估算值，實際額度請參考 Google AI Studio 帳單頁面。
+                  </p>
+                  <button 
+                    onClick={() => setTokenUsage(0)}
+                    className="mt-4 text-[10px] text-red-400 hover:text-red-300 underline"
+                  >
+                    重設統計
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         </div>
