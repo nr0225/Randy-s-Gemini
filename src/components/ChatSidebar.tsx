@@ -292,6 +292,14 @@ export function ChatSidebar({
               </div>
             )}
           </div>
+          <div className="p-4 border-t border-gray-700 bg-gray-800 flex justify-end">
+            <button
+              onClick={() => setIsMemoryModalOpen(false)}
+              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm"
+            >
+              儲存並關閉
+            </button>
+          </div>
         </div>
       )}
 
