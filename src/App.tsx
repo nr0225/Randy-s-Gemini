@@ -44,6 +44,12 @@ export default function App() {
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
           const activeTab = tabs[0];
           if (activeTab && activeTab.id) {
+            // 檢查是否為受限的 URL (例如 chrome:// 或 edge://)
+            if (activeTab.url && (activeTab.url.startsWith('chrome://') || activeTab.url.startsWith('edge://') || activeTab.url.startsWith('about:'))) {
+              setContent('無法讀取此頁面的內容 (受限的瀏覽器頁面)。');
+              return;
+            }
+
             chrome.scripting.executeScript({
               target: { tabId: activeTab.id },
               func: () => document.body.innerText,
